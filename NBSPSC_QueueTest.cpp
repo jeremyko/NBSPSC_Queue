@@ -6,7 +6,6 @@
 #include <thread>
 #include <unistd.h>
 
-const int MAX_ARRAY_CNT = 1000;
 const int MAX_TEST = 1000000 ;
 
 typedef struct __ST_QUEUE_DATA__
