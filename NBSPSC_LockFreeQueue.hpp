@@ -2,6 +2,7 @@
 //Non-blocking operation
 
 #include <atomic>
+#include <cstddef>
 
 //const int MAX_ARRAY_CNT = 1000;
 
