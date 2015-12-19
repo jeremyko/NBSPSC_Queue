@@ -1,4 +1,4 @@
-#include "NBSPSC_Queue.hpp"
+#include "NBSPSC_LockFreeQueue.hpp"
 
 #include <stdio.h>
 #include <string.h>
@@ -21,7 +21,7 @@ typedef struct __ST_QUEUE_DATA__
 //----------------------------------------------------------------------
 
 ///////////////////////////////////////////////
-ThreadSafeQueueSPSC<ST_QUEUE_DATA, 1000> gQueue ;
+LockFreeQueueNBSPSC<ST_QUEUE_DATA, 1000> gQueue ;
 
 ///////////////////////////////////////////////
 void Producer()
@@ -80,7 +80,7 @@ void Consumer()
 
                 gQueue.CommitPop();
 
-                printf("[%s]  Pop: index=%d / %s\n", __func__,  i, pQueueData->data_record ); 
+                //printf("[%s]  Pop: index=%d / %s\n", __func__,  i, pQueueData->data_record ); 
 
                 break;
             }
@@ -100,5 +100,5 @@ int main ()
     return 0;
 }
 
-// g++ -std=c++11 -pthread -o NBSPSC_QueueTest NBSPSC_QueueTest.cpp
+// g++ -std=c++11 -pthread -o NBSPSC_LockFreeQueueTest NBSPSC_LockFreeQueueTest.cpp
 

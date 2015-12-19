@@ -14,7 +14,7 @@ typedef enum __OPERATION_RESULT__
 } OPERATION_RESULT;
 
 template <typename T, int MAX_ARRAY_CNT>
-class ThreadSafeQueueSPSC
+class LockFreeQueueNBSPSC
 {
     private:
         std::atomic<size_t> nWriteIndex_ ;
@@ -24,7 +24,7 @@ class ThreadSafeQueueSPSC
 
     public:
 
-        ThreadSafeQueueSPSC()
+        LockFreeQueueNBSPSC()
         {
             nWriteIndex_ = 0;
             nReadIndex_  = 0;
