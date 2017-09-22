@@ -26,6 +26,6 @@
 *.exe
 *.out
 *.app
-NBSPSC_LockFreeQueueTest
+test
 *.swp
 

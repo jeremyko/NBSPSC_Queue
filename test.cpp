@@ -1,12 +1,13 @@
-#include "NBSPSC_LockFreeQueue.hpp"
+#include "NBSPSC_Queue.hpp"
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 #include <thread>
 #include <unistd.h>
+#include <iostream>
 
-const int MAX_TEST = 1000000 ;
+const int MAX_TEST = 100 ;
 
 typedef struct __ST_QUEUE_DATA__
 {
@@ -21,7 +22,7 @@ typedef struct __ST_QUEUE_DATA__
 //----------------------------------------------------------------------
 
 ///////////////////////////////////////////////
-LockFreeQueueNBSPSC<ST_QUEUE_DATA, 1000> gQueue ;
+NBSPSC_Queue<ST_QUEUE_DATA, 10> gQueue ;
 
 ///////////////////////////////////////////////
 void Producer()
@@ -38,7 +39,7 @@ void Producer()
         while(1)
         {
             OPERATION_RESULT nRslt = gQueue.Push(&queueData);
-            if( nRslt != QUEUE_OK )
+            if( nRslt == QUEUE_FULL )
             {
                 usleep(1);
                 continue;
@@ -63,7 +64,7 @@ void Consumer()
         while(1)
         {
             OPERATION_RESULT nRslt = gQueue.Pop(& pQueueData) ;
-            if( nRslt != QUEUE_OK )
+            if( nRslt == QUEUE_EMPTY )
             {
                 usleep(1);
                 continue;
@@ -72,7 +73,7 @@ void Consumer()
             {
                 if( pQueueData->data_index != nVerify )
                 {
-                    printf("[%s-%d] Errorr %d-%zu [%s]\n", __func__, __LINE__, pQueueData->data_index, nVerify, pQueueData->data_record ); 
+                    std::cerr << "Errorr : " << pQueueData->data_index << "/" << nVerify << "/" << pQueueData->data_record << "\n" ; 
                     exit(0);
                 }
 
@@ -80,7 +81,7 @@ void Consumer()
 
                 gQueue.CommitPop();
 
-                //printf("[%s]  Pop: index=%d / %s\n", __func__,  i, pQueueData->data_record ); 
+                std::cout << "Pop: index=" << i << " / " << pQueueData->data_record << "\n" ; 
 
                 break;
             }
@@ -91,6 +92,8 @@ void Consumer()
 ///////////////////////////////////////////////
 int main ()
 {
+    std::cout<< "Queue capacity :" << gQueue.GetQueueTotalCapacity() <<"\n";
+
     std::thread ConsumerThread(Consumer);
     std::thread ProducerThread(Producer);
 
@@ -100,5 +103,5 @@ int main ()
     return 0;
 }
 
-// g++ -std=c++11 -pthread -o NBSPSC_LockFreeQueueTest NBSPSC_LockFreeQueueTest.cpp
+// g++ -std=c++11 -pthread -o test test.cpp
 

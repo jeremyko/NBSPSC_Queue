@@ -1,10 +1,9 @@
-//Single Producer Single Consumer lock free queue using array
+//Single Producer Single Consumer queue using vector
 //Non-blocking operation
 
 #include <atomic>
+#include <vector>
 #include <cstddef>
-
-//const int MAX_ARRAY_CNT = 1000;
 
 typedef enum __OPERATION_RESULT__
 {
@@ -15,20 +14,21 @@ typedef enum __OPERATION_RESULT__
 } OPERATION_RESULT;
 
 template <typename T, int MAX_ARRAY_CNT>
-class LockFreeQueueNBSPSC
+class NBSPSC_Queue
 {
     private:
         std::atomic<size_t> nWriteIndex_ ;
         std::atomic<size_t> nReadIndex_ ;
-        T arrayOfData_[MAX_ARRAY_CNT];
+        std::vector<T> vec_data_ ;
         const int ST_QUEUE_DATA_LEN = sizeof (T);
 
     public:
 
-        LockFreeQueueNBSPSC()
+        NBSPSC_Queue()
         {
             nWriteIndex_ = 0;
             nReadIndex_  = 0;
+            vec_data_.reserve(MAX_ARRAY_CNT);
         }
 
         ///////////////////////////////////////////////////////////
@@ -53,7 +53,7 @@ class LockFreeQueueNBSPSC
                 }
             }
 
-            memcpy( & arrayOfData_[nWriteIndex_], pQueuedata, ST_QUEUE_DATA_LEN);
+            memcpy( & vec_data_[nWriteIndex_], pQueuedata, ST_QUEUE_DATA_LEN);
             
             nWriteIndex_++  ;
 
@@ -77,7 +77,7 @@ class LockFreeQueueNBSPSC
                 nReadIndex_ = 0 ;
             }
 
-            *ppQueuedata = & arrayOfData_[nReadIndex_];
+            *ppQueuedata = & vec_data_[nReadIndex_];
             
             return QUEUE_OK ;
         }
@@ -86,6 +86,12 @@ class LockFreeQueueNBSPSC
         void CommitPop()
         {
             nReadIndex_++ ;
+        }
+
+        ///////////////////////////////////////////////////////////
+        int GetQueueTotalCapacity()
+        {
+            return vec_data_.capacity() ;
         }
 
 };
