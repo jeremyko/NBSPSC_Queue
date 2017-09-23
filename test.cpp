@@ -38,7 +38,7 @@ void Producer()
 
         while(1)
         {
-            OPERATION_RESULT nRslt = gQueue.Push(&queueData);
+            OPERATION_RESULT nRslt = gQueue.Push(queueData);
             if( nRslt == QUEUE_FULL )
             {
                 usleep(1);

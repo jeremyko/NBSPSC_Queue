@@ -32,7 +32,7 @@ class NBSPSC_Queue
         }
 
         ///////////////////////////////////////////////////////////
-        OPERATION_RESULT Push(T* pQueuedata )
+        OPERATION_RESULT Push(T& queue_data )
         {
             if ( nWriteIndex_  >= MAX_ARRAY_CNT )
             {
@@ -53,7 +53,7 @@ class NBSPSC_Queue
                 }
             }
 
-            memcpy( & vec_data_[nWriteIndex_], pQueuedata, ST_QUEUE_DATA_LEN);
+            vec_data_[nWriteIndex_] = queue_data ;
             
             nWriteIndex_++  ;
 
