@@ -3,8 +3,10 @@
 
 #include <atomic>
 #include <vector>
-#include <cstddef>
 
+#define CACHE_LINE_SIZE 64 
+
+///////////////////////////////////////////////////////////////////////////////
 typedef enum __OPERATION_RESULT__
 {
     QUEUE_OK  = 0,
@@ -13,17 +15,19 @@ typedef enum __OPERATION_RESULT__
 
 } OPERATION_RESULT;
 
+///////////////////////////////////////////////////////////////////////////////
 template <typename T, int MAX_ARRAY_CNT>
 class NBSPSC_Queue
 {
     private:
-        std::atomic<size_t> nWriteIndex_ ;
-        std::atomic<size_t> nReadIndex_ ;
-        std::vector<T> vec_data_ ;
+        std::atomic<size_t> nWriteIndex_ alignas(CACHE_LINE_SIZE);
+        std::atomic<size_t> nReadIndex_  alignas(CACHE_LINE_SIZE) ;
+        std::vector<T> vec_data_         alignas(CACHE_LINE_SIZE);
         const int ST_QUEUE_DATA_LEN = sizeof (T);
 
     public:
 
+        //-------------------------------------------------------------------
         NBSPSC_Queue()
         {
             nWriteIndex_ = 0;
@@ -31,23 +35,26 @@ class NBSPSC_Queue
             vec_data_.reserve(MAX_ARRAY_CNT);
         }
 
-        ///////////////////////////////////////////////////////////
+        //-------------------------------------------------------------------
         OPERATION_RESULT Push(T& queue_data )
         {
+            size_t temp_read_index = nReadIndex_ ;
+
             if ( nWriteIndex_  >= MAX_ARRAY_CNT )
             {
-                if( nReadIndex_ == 0 )
+                if( temp_read_index == 0 )
                 {
                     return QUEUE_FULL; 
                 }
-
-                nWriteIndex_ = 0 ;
-
-                return QUEUE_FULL; 
+                else
+                {
+                    nWriteIndex_ = 0 ;
+                }
             }
-            else if ( nWriteIndex_ < nReadIndex_ )
+
+            if ( nWriteIndex_ < temp_read_index )
             {
-                if ( nWriteIndex_ +1  >= nReadIndex_ )
+                if ( nWriteIndex_ +1  >= temp_read_index )
                 {
                     return QUEUE_FULL; 
                 }
@@ -60,16 +67,18 @@ class NBSPSC_Queue
             return QUEUE_OK ;
         }
 
-        ///////////////////////////////////////////////////////////
+        //-------------------------------------------------------------------
         OPERATION_RESULT Pop(T** ppQueuedata)
         {
-            if (nWriteIndex_ == nReadIndex_)
+            size_t temp_write_index = nWriteIndex_ ;
+
+            if (temp_write_index == nReadIndex_)
             {
                 return QUEUE_EMPTY ;
             }
             else if ( nReadIndex_ >= MAX_ARRAY_CNT )
             {
-                if( nWriteIndex_ == 0 )
+                if( temp_write_index == 0 )
                 {
                     return QUEUE_EMPTY ; 
                 }
@@ -82,18 +91,17 @@ class NBSPSC_Queue
             return QUEUE_OK ;
         }
 
-        ///////////////////////////////////////////////////////////
+        //-------------------------------------------------------------------
         void CommitPop()
         {
             nReadIndex_++ ;
         }
 
-        ///////////////////////////////////////////////////////////
+        //-------------------------------------------------------------------
         int GetQueueTotalCapacity()
         {
             return vec_data_.capacity() ;
         }
-
 };
 
 

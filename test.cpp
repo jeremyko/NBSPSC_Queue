@@ -7,7 +7,13 @@
 #include <unistd.h>
 #include <iostream>
 
-const int MAX_TEST = 100 ;
+//-----------------------------------------------------------------------------
+// TEST 
+//-----------------------------------------------------------------------------
+
+const int MAX_TEST = 1000000 ;
+
+std::chrono::microseconds sleep_duration_microsec (1);
 
 typedef struct __ST_QUEUE_DATA__
 {
@@ -16,15 +22,10 @@ typedef struct __ST_QUEUE_DATA__
 
 } ST_QUEUE_DATA ;
 
-
-//----------------------------------------------------------------------
-// TEST 
-//----------------------------------------------------------------------
-
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 NBSPSC_Queue<ST_QUEUE_DATA, 10> gQueue ;
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void Producer()
 {
     ST_QUEUE_DATA queueData;
@@ -41,7 +42,7 @@ void Producer()
             OPERATION_RESULT nRslt = gQueue.Push(queueData);
             if( nRslt == QUEUE_FULL )
             {
-                usleep(1);
+                std::this_thread::sleep_for(sleep_duration_microsec);
                 continue;
             }
             else
@@ -50,9 +51,10 @@ void Producer()
             }
         }
     }
+    std::cout<< "Producer Done\n" ;
 }
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 void Consumer()
 {
     size_t nVerify = 0;
@@ -66,14 +68,18 @@ void Consumer()
             OPERATION_RESULT nRslt = gQueue.Pop(& pQueueData) ;
             if( nRslt == QUEUE_EMPTY )
             {
-                usleep(1);
+                std::this_thread::sleep_for(sleep_duration_microsec);
                 continue;
             }
             else
             {
                 if( pQueueData->data_index != nVerify )
                 {
-                    std::cerr << "Errorr : " << pQueueData->data_index << "/" << nVerify << "/" << pQueueData->data_record << "\n" ; 
+                    std::cerr << "Pop errorr : data_index=" 
+                        << pQueueData->data_index << "/ nVerify=" << nVerify 
+                        << " / data_record=" 
+                        << pQueueData->data_record  
+                        << "\n" ; 
                     exit(0);
                 }
 
@@ -81,15 +87,14 @@ void Consumer()
 
                 gQueue.CommitPop();
 
-                std::cout << "Pop: index=" << i << " / " << pQueueData->data_record << "\n" ; 
-
                 break;
             }
         }
-    }
+    }//for
+    std::cout<< "Consumer OK\n";
 }
 
-///////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 int main ()
 {
     std::cout<< "Queue capacity :" << gQueue.GetQueueTotalCapacity() <<"\n";
@@ -103,5 +108,5 @@ int main ()
     return 0;
 }
 
-// g++ -std=c++11 -pthread -o test test.cpp
+// g++ -Wall -O2 -g -std=c++11 -pthread -o test test.cpp
 
