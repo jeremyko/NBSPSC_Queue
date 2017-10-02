@@ -57,7 +57,7 @@ void Producer()
 ///////////////////////////////////////////////////////////////////////////////
 void Consumer()
 {
-    size_t nVerify = 0;
+    std::size_t nVerify = 0;
 
     ST_QUEUE_DATA* pQueueData;
 

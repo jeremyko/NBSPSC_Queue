@@ -20,8 +20,8 @@ template <typename T, int MAX_ARRAY_CNT>
 class NBSPSC_Queue
 {
     private:
-        std::atomic<size_t> nWriteIndex_ alignas(CACHE_LINE_SIZE);
-        std::atomic<size_t> nReadIndex_  alignas(CACHE_LINE_SIZE) ;
+        std::atomic<std::size_t> nWriteIndex_ alignas(CACHE_LINE_SIZE);
+        std::atomic<std::size_t> nReadIndex_  alignas(CACHE_LINE_SIZE) ;
         std::vector<T> vec_data_         alignas(CACHE_LINE_SIZE);
         const int ST_QUEUE_DATA_LEN = sizeof (T);
 
@@ -38,7 +38,7 @@ class NBSPSC_Queue
         //-------------------------------------------------------------------
         OPERATION_RESULT Push(T& queue_data )
         {
-            size_t temp_read_index = nReadIndex_ ;
+            std::size_t temp_read_index = nReadIndex_ ;
 
             if ( nWriteIndex_  >= MAX_ARRAY_CNT )
             {
@@ -70,7 +70,7 @@ class NBSPSC_Queue
         //-------------------------------------------------------------------
         OPERATION_RESULT Pop(T** ppQueuedata)
         {
-            size_t temp_write_index = nWriteIndex_ ;
+            std::size_t temp_write_index = nWriteIndex_ ;
 
             if (temp_write_index == nReadIndex_)
             {
