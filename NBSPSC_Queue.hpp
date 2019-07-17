@@ -24,82 +24,52 @@ class NBSPSC_Queue
         std::atomic<std::size_t> nReadIndex_  alignas(CACHE_LINE_SIZE) ;
         std::vector<T> vec_data_         alignas(CACHE_LINE_SIZE);
         const int ST_QUEUE_DATA_LEN = sizeof (T);
-
     public:
-
         //-------------------------------------------------------------------
-        NBSPSC_Queue()
-        {
+        NBSPSC_Queue() {
             nWriteIndex_ = 0;
             nReadIndex_  = 0;
             vec_data_.reserve(MAX_ARRAY_CNT);
         }
-
         //-------------------------------------------------------------------
-        OPERATION_RESULT Push(T& queue_data )
-        {
+        OPERATION_RESULT Push(T& queue_data ) {
             std::size_t temp_read_index = nReadIndex_ ;
-
-            if ( nWriteIndex_  >= MAX_ARRAY_CNT )
-            {
-                if( temp_read_index == 0 )
-                {
+            if ( nWriteIndex_  >= MAX_ARRAY_CNT ) {
+                if( temp_read_index == 0 ) {
                     return QUEUE_FULL; 
-                }
-                else
-                {
+                } else {
                     nWriteIndex_ = 0 ;
                 }
             }
-
-            if ( nWriteIndex_ < temp_read_index )
-            {
-                if ( nWriteIndex_ +1  >= temp_read_index )
-                {
+            if ( nWriteIndex_ < temp_read_index ) {
+                if ( nWriteIndex_ +1  >= temp_read_index ) {
                     return QUEUE_FULL; 
                 }
             }
-
             vec_data_[nWriteIndex_] = queue_data ;
-            
             nWriteIndex_++  ;
-
             return QUEUE_OK ;
         }
-
         //-------------------------------------------------------------------
-        OPERATION_RESULT Pop(T** ppQueuedata)
-        {
+        OPERATION_RESULT Pop(T** ppQueuedata) {
             std::size_t temp_write_index = nWriteIndex_ ;
-
-            if (temp_write_index == nReadIndex_)
-            {
+            if (temp_write_index == nReadIndex_) {
                 return QUEUE_EMPTY ;
-            }
-            else if ( nReadIndex_ >= MAX_ARRAY_CNT )
-            {
-                if( temp_write_index == 0 )
-                {
+            } else if ( nReadIndex_ >= MAX_ARRAY_CNT ) {
+                if( temp_write_index == 0 ) {
                     return QUEUE_EMPTY ; 
                 }
-                
                 nReadIndex_ = 0 ;
             }
-
             *ppQueuedata = & vec_data_[nReadIndex_];
-            
             return QUEUE_OK ;
         }
-
         //-------------------------------------------------------------------
-        void CommitPop()
-        {
+        void CommitPop() {
             nReadIndex_++ ;
         }
-
         //-------------------------------------------------------------------
-        int GetQueueTotalCapacity()
-        {
+        int GetQueueTotalCapacity() {
             return vec_data_.capacity() ;
         }
 };
