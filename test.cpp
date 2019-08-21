@@ -17,36 +17,29 @@ std::chrono::microseconds sleep_duration_microsec (1);
 
 typedef struct __ST_QUEUE_DATA__
 {
-    int  data_index;
+    size_t  data_index;
     char data_record[4096];
 
 } ST_QUEUE_DATA ;
 
 ///////////////////////////////////////////////////////////////////////////////
-NBSPSC_Queue<ST_QUEUE_DATA, 10> gQueue ;
+NBSPSC_Queue<ST_QUEUE_DATA, 10> g_queue ;
 
 ///////////////////////////////////////////////////////////////////////////////
 void Producer()
 {
-    ST_QUEUE_DATA queueData;
-    char szTemp[20];
+    ST_QUEUE_DATA queue_data;
 
-    for ( int i =0; i < MAX_TEST; i++)
-    {
-        queueData.data_index= i;
-        snprintf(szTemp, sizeof(szTemp), "data-%d", i );
-        memcpy(queueData.data_record, szTemp, strlen(szTemp));
+    for ( size_t i =0; i < MAX_TEST; i++) {
+        queue_data.data_index= i;
+        snprintf(queue_data.data_record, sizeof(queue_data.data_record), "data-%ld", i );
 
-        while(1)
-        {
-            OPERATION_RESULT nRslt = gQueue.Push(queueData);
-            if( nRslt == QUEUE_FULL )
-            {
+        while(1) {
+            OPERATION_RESULT rslt = g_queue.Push(queue_data);
+            if( rslt == QUEUE_FULL ) {
                 std::this_thread::sleep_for(sleep_duration_microsec);
                 continue;
-            }
-            else
-            {
+            } else {
                 break;
             }
         }
@@ -57,36 +50,27 @@ void Producer()
 ///////////////////////////////////////////////////////////////////////////////
 void Consumer()
 {
-    std::size_t nVerify = 0;
+    std::size_t verify = 0;
+    ST_QUEUE_DATA* queue_data;
 
-    ST_QUEUE_DATA* pQueueData;
-
-    for ( int i =0; i < MAX_TEST; i++)
-    {
-        while(1)
-        {
-            OPERATION_RESULT nRslt = gQueue.Pop(& pQueueData) ;
-            if( nRslt == QUEUE_EMPTY )
-            {
+    for ( int i =0; i < MAX_TEST; i++) {
+        while(1) {
+            OPERATION_RESULT nRslt = g_queue.Pop(& queue_data) ;
+            if( nRslt == QUEUE_EMPTY ) {
                 std::this_thread::sleep_for(sleep_duration_microsec);
                 continue;
-            }
-            else
-            {
-                if( pQueueData->data_index != nVerify )
-                {
+            } else {
+                if( queue_data->data_index != verify ) {
                     std::cerr << "Pop errorr : data_index=" 
-                        << pQueueData->data_index << "/ nVerify=" << nVerify 
+                        << queue_data->data_index << "/ verify=" << verify 
                         << " / data_record=" 
-                        << pQueueData->data_record  
+                        << queue_data->data_record  
                         << "\n" ; 
                     exit(0);
                 }
+                verify++;
 
-                nVerify++;
-
-                gQueue.CommitPop();
-
+                g_queue.CommitPop();
                 break;
             }
         }
@@ -97,7 +81,7 @@ void Consumer()
 ///////////////////////////////////////////////////////////////////////////////
 int main ()
 {
-    std::cout<< "Queue capacity :" << gQueue.GetQueueTotalCapacity() <<"\n";
+    std::cout<< "Queue capacity :" << g_queue.GetQueueTotalCapacity() <<"\n";
 
     std::thread ConsumerThread(Consumer);
     std::thread ProducerThread(Producer);
