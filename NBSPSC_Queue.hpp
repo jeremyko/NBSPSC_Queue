@@ -31,6 +31,14 @@ class NBSPSC_Queue
             write_index_ = 0;
             read_index_  = 0;
             vec_data_.reserve(MAX_ARRAY_CNT);
+            if(!std::is_trivial<T>::value){
+                //non trivial type -> can not use a simple bit by bit copy. 
+                //    -> create all objects in advance.
+                for(int index=0; index < MAX_ARRAY_CNT; index++){
+                    T data;
+                    vec_data_.push_back(data);
+                }
+            }
         }
         //-------------------------------------------------------------------
         OPERATION_RESULT Push(T& queue_data ) {

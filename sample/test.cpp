@@ -11,16 +11,16 @@
 // TEST 
 //-----------------------------------------------------------------------------
 
-const int MAX_TEST = 1000000 ;
+const int MAX_TEST = 10 ;
 
 std::chrono::microseconds sleep_duration_microsec (1);
 
-typedef struct __ST_QUEUE_DATA__
+struct ST_QUEUE_DATA
 {
-    size_t  data_index;
-    char data_record[4096];
-
-} ST_QUEUE_DATA ;
+    size_t      data_index;
+    char        data_record1 [100];
+    std::string data_record2; // this causes a non-trivial type.
+} ;
 
 ///////////////////////////////////////////////////////////////////////////////
 NBSPSC_Queue<ST_QUEUE_DATA, 10> g_queue ;
@@ -29,10 +29,12 @@ NBSPSC_Queue<ST_QUEUE_DATA, 10> g_queue ;
 void Producer()
 {
     ST_QUEUE_DATA queue_data;
+    std::cout << "is_trivial :" <<std::is_trivial<ST_QUEUE_DATA>::value << '\n'; 
 
     for ( size_t i =0; i < MAX_TEST; i++) {
         queue_data.data_index= i;
-        snprintf(queue_data.data_record, sizeof(queue_data.data_record), "data-%ld", i );
+        snprintf(queue_data.data_record1, sizeof(queue_data.data_record1), "data-%ld", i );
+        queue_data.data_record2 = queue_data.data_record1 ;
 
         while(1) {
             OPERATION_RESULT rslt = g_queue.Push(queue_data);
@@ -60,16 +62,17 @@ void Consumer()
                 std::this_thread::sleep_for(sleep_duration_microsec);
                 continue;
             } else {
+                std::cout << "data_index=" << queue_data->data_index  
+                    << " / data_record1=" << queue_data->data_record1  
+                    << " / data_record2=" << queue_data->data_record2 << "\n" ; 
                 if( queue_data->data_index != verify ) {
                     std::cerr << "Pop errorr : data_index=" 
                         << queue_data->data_index << "/ verify=" << verify 
-                        << " / data_record=" 
-                        << queue_data->data_record  
-                        << "\n" ; 
+                        << " / data_record1=" << queue_data->data_record1  
+                        << " / data_record2=" << queue_data->data_record2 << "\n" ; 
                     exit(0);
                 }
                 verify++;
-
                 g_queue.CommitPop();
                 break;
             }
@@ -88,9 +91,7 @@ int main ()
 
     ConsumerThread.join();
     ProducerThread.join();
-
     return 0;
 }
 
-// g++ -Wall -O2 -g -std=c++11 -pthread -o test test.cpp
 
